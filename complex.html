@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Complex Number Arithmetic</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>&#9312; Complex numbers <span class="sub">&mdash; angles add, lengths multiply</span></h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a class="active" href="complex.html">&#9312; Complex arithmetic</a>
+      <a href="mandelbrot.html">&#9313; Mandelbrot iteration</a>
+    </nav>
+    <button id="theme" title="Switch light / dark theme"></button>
+  </header>
+
+  <main class="app">
+    <div class="stage">
+      <canvas class="plane" id="plane"></canvas>
+      <div class="overlay hint" id="hint"></div>
+      <div class="overlay readout" id="readout"></div>
+      <div class="overlay zoom-ctl">
+        <button id="zin" title="Zoom in">+</button>
+        <button id="zout" title="Zoom out">&minus;</button>
+        <button id="zhome" title="Reset view">&#8962;</button>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="section">
+        <h2>Operation <span class="muted" style="text-transform:none;letter-spacing:0">(keys 1&ndash;4)</span></h2>
+        <div class="seg" id="ops">
+          <button data-op="add">z + w</button>
+          <button data-op="mul">z &middot; w</button>
+          <button data-op="square">z&sup2;</button>
+          <button data-op="powers">z&#8319;</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="card explain" id="explain"></div>
+        <div class="row">
+          <button class="primary" id="animate" title="Shortcut: A">&#9654; Animate</button>
+          <button id="swap" title="Shortcut: S">Swap z &harr; w</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>The numbers</h2>
+        <div id="cards" class="section"></div>
+      </div>
+
+      <div class="section">
+        <h2>Try these</h2>
+        <div class="row tight" id="presets"></div>
+      </div>
+
+      <div class="section" id="powersSec">
+        <h2>Powers</h2>
+        <div class="slider-row">
+          <label for="nSlider">highest n</label>
+          <input type="range" id="nSlider" min="1" max="40" value="12">
+          <output id="nOut">12</output>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Display</h2>
+        <div class="row">
+          <div class="seg grow" id="viewSeg">
+            <button data-view="vector">Arrows</button>
+            <button data-view="point">Points</button>
+          </div>
+          <div class="seg" id="unitSeg">
+            <button data-unit="deg">degrees</button>
+            <button data-unit="rad">radians</button>
+          </div>
+        </div>
+        <div class="toggles">
+          <label data-ops="add"><input type="checkbox" id="tPara" checked> Parallelogram</label>
+          <label data-ops="mul square"><input type="checkbox" id="tArcs" checked> Angle arcs</label>
+          <label data-ops="mul square"><input type="checkbox" id="tCircles"> Length circles</label>
+          <label data-ops="mul"><input type="checkbox" id="tTri"> Similar triangles</label>
+          <label data-ops="powers"><input type="checkbox" id="tSpiral" checked> Smooth spiral</label>
+          <label><input type="checkbox" id="tUnit" checked> Unit circle</label>
+          <label><input type="checkbox" id="tSnap" checked> Snap to grid</label>
+        </div>
+      </div>
+
+      <p class="muted small" style="margin:0">
+        Drag the coloured points. Drag the empty background to pan, scroll to zoom.
+        With <b>snap</b> on, points click onto the grid and onto the unit circle (in 15&deg; steps).
+      </p>
+    </aside>
+  </main>
+
+  <script src="js/plane.js"></script>
+  <script src="js/complex.js"></script>
+</body>
+</html>

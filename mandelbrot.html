@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mandelbrot Iteration Explorer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>&#9313; The Mandelbrot iteration <span class="sub">&mdash; z &rarr; z&sup2; + c</span></h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="complex.html">&#9312; Complex arithmetic</a>
+      <a class="active" href="mandelbrot.html">&#9313; Mandelbrot iteration</a>
+    </nav>
+    <button id="explorerBtn" class="explorer-btn" title="View just the set, full width, with colour palettes (key E)">&#128301; Explorer</button>
+    <button id="theme" title="Switch light / dark theme"></button>
+  </header>
+
+  <main class="app">
+    <div class="stage">
+      <canvas class="plane" id="plane"></canvas>
+      <div class="overlay hint" id="hint"></div>
+      <div class="overlay readout" id="readout"></div>
+      <div class="overlay zoom-ctl">
+        <button id="zin" title="Zoom in">+</button>
+        <button id="zout" title="Zoom out">&minus;</button>
+        <button id="zhome" title="Reset view">&#8962;</button>
+      </div>
+      <div class="overlay explorer-bar">
+        <select id="palette" title="Colour palette"></select>
+        <label title="How quickly the colours cycle">Bands <input type="range" id="density" min="6" max="80" value="24"></label>
+        <button id="exFull" title="Full screen on / off">Full screen</button>
+        <button id="exExit" title="Back to the iteration view (Esc)">&#10005; Exit</button>
+        <span class="small muted">click to zoom in &middot; drag to pan &middot; scroll to zoom</span>
+      </div>
+      <div class="overlay viewinfo">
+        <span id="vInfo"></span>
+        <button id="dDown" title="Less depth: faster, but less detail near the edge of the set">&minus;</button>
+        <button id="dUp" title="More depth: slower, but more detail near the edge of the set">+</button>
+      </div>
+    </div>
+
+    <aside class="side">
+      <!-- display options (drop-down) -->
+      <details class="dropdown" id="displayMenu">
+        <summary>Display options</summary>
+        <div class="menu">
+          <div class="toggles">
+            <label><input type="checkbox" id="tLines" checked> Connect the steps</label>
+            <label><input type="checkbox" id="tPoints" checked> Points</label>
+            <label><input type="checkbox" id="tLabels" checked> Labels z&#8320;, z&#8321;, &hellip;</label>
+            <label><input type="checkbox" id="tMoves"> Square, then add c</label>
+            <label><input type="checkbox" id="tCircle" checked> Escape circle |z|=2</label>
+            <label><input type="checkbox" id="tCycle" checked> Mark final cycle</label>
+            <label><input type="checkbox" id="tShadow" checked> Shadow of the set</label>
+            <label><input type="checkbox" id="tFollow"> Follow the mouse</label>
+            <label><input type="checkbox" id="tSound"> &#128266; Orbit sound</label>
+          </div>
+          <div class="row">
+            <span class="small muted">Shadow style</span>
+            <select id="shadowStyle" class="grow">
+              <option value="silhouette">Silhouette (soft shadow)</option>
+              <option value="color">Colour by escape speed</option>
+            </select>
+          </div>
+          <label class="check small"><input type="checkbox" id="tMatchN"> Shadow uses only N steps: slide N up from 1 and watch the set take shape</label>
+        </div>
+      </details>
+
+      <!-- mode + rule -->
+      <div class="section">
+        <div class="seg" id="modeSeg">
+          <button data-mode="M">Mandelbrot: move <span class="cc">c</span></button>
+          <button data-mode="J">Julia: move <span class="cz">z&#8320;</span></button>
+        </div>
+        <div class="card explain" id="rule"></div>
+      </div>
+
+      <!-- iteration controls -->
+      <div class="section">
+        <h2>Iteration <span class="muted" style="text-transform:none;letter-spacing:0">(keys <span class="kbd">&larr;</span> <span class="kbd">&rarr;</span> <span class="kbd">Space</span> <span class="kbd">Home</span> <span class="kbd">End</span>)</span></h2>
+        <div class="stepinfo">showing steps 0 &hellip; <b id="kOut">0</b> &nbsp;of&nbsp; <b id="NOut">0</b></div>
+        <div class="transport">
+          <button id="bFirst" title="Back to the start (Home)">&#9198;</button>
+          <button id="bBack" title="One step back (&larr;)">&#9664;</button>
+          <button id="bPlay" class="primary" title="Play / pause (Space)">&#9654;</button>
+          <button id="bStep" title="One step forward (&rarr;)">&#9654;|</button>
+          <button id="bLast" title="Show all steps (End)">&#9197;</button>
+        </div>
+        <div class="slider-row">
+          <label for="N">Max steps N</label>
+          <input type="range" id="N" min="0" max="1000" value="399">
+          <output id="NVal">30</output>
+        </div>
+        <div class="slider-row">
+          <label for="speed">Speed</label>
+          <input type="range" id="speed" min="1" max="30" value="3">
+          <output id="speedVal">3/s</output>
+        </div>
+      </div>
+
+      <!-- starting values -->
+      <div class="section">
+        <h2>Starting values</h2>
+        <div class="card" style="display:flex;flex-direction:column;gap:8px">
+          <div class="cxrow">
+            <span class="cc">c&nbsp;=</span>
+            <input class="num" id="cRe" type="text" inputmode="decimal" spellcheck="false" title="real part of c">
+            <span class="op">+ i</span>
+            <input class="num" id="cIm" type="text" inputmode="decimal" spellcheck="false" title="imaginary part of c">
+          </div>
+          <div class="cxrow">
+            <span class="cz">z&#8320;&nbsp;=</span>
+            <input class="num" id="zRe" type="text" inputmode="decimal" spellcheck="false" title="real part of z0">
+            <span class="op">+ i</span>
+            <input class="num" id="zIm" type="text" inputmode="decimal" spellcheck="false" title="imaginary part of z0">
+          </div>
+          <select id="presets"></select>
+          <div class="small" id="presetNote"></div>
+        </div>
+      </div>
+
+      <!-- verdict -->
+      <div class="section">
+        <div class="card accent verdict" id="verdict"></div>
+      </div>
+
+      <!-- this step -->
+      <div class="section">
+        <h2>This step, worked out</h2>
+        <div class="card explain" id="stepExplain"></div>
+      </div>
+
+      <!-- chart -->
+      <div class="section">
+        <h2>Size |z&#8345;| after each step <span class="muted" style="text-transform:none;letter-spacing:0">(click to jump)</span></h2>
+        <canvas class="chart" id="chart"></canvas>
+      </div>
+
+      <!-- table -->
+      <div class="section">
+        <h2>The numbers <span class="muted" style="text-transform:none;letter-spacing:0">(click a row to jump)</span></h2>
+        <div class="table-wrap" id="tableWrap">
+          <table class="orbit">
+            <thead><tr><th>n</th><th>Re z&#8345;</th><th>Im z&#8345;</th><th>|z&#8345;|</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- paint -->
+      <div class="section">
+        <h2>How the computer draws the picture</h2>
+        <p class="small muted" style="margin:0">Each pixel is one value of c. Run the iteration for it, then colour the pixel
+          dark if the orbit stays bounded, or by how fast it escapes.</p>
+        <button id="bPaint">&#127912; Paint the set point by point</button>
+      </div>
+    </aside>
+  </main>
+
+  <script src="js/plane.js"></script>
+  <script src="js/mandelbrot.js"></script>
+  <script>
+    // close the display-options drop-down when clicking elsewhere
+    document.addEventListener('pointerdown', function (e) {
+      var m = document.getElementById('displayMenu');
+      if (m.open && !m.contains(e.target)) m.open = false;
+    });
+  </script>
+</body>
+</html>

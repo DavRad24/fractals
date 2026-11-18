@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fractals Classroom Demos</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { overflow-y: auto; }
+    .home { max-width: 980px; margin: 0 auto; padding: 36px 16px 60px; width: 100%; }
+    .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; align-items: center; }
+    .hero h2 { font-size: 34px; line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.02em; }
+    .hero p { font-size: 17px; color: var(--muted); margin: 0 0 10px; }
+    #heroCanvas { width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; display: block; background: #050814; box-shadow: var(--shadow); }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 34px; }
+    a.demo {
+      display: block; text-decoration: none; color: inherit;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px 22px; box-shadow: var(--shadow); transition: transform .12s, border-color .12s;
+    }
+    a.demo:hover { transform: translateY(-2px); border-color: var(--accent); }
+    a.demo h3 { margin: 0 0 6px; font-size: 21px; }
+    a.demo .num { color: var(--accent); font-weight: 750; margin-right: 6px; }
+    a.demo p { margin: 0 0 8px; color: var(--muted); }
+    a.demo ul { margin: 6px 0 0; padding-left: 20px; }
+    a.demo li { margin: 2px 0; }
+    .tips { margin-top: 30px; }
+    .tips h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .tips ol { padding-left: 20px; }
+    .tips li { margin: 6px 0; }
+    @media (max-width: 760px) { .hero, .cards { grid-template-columns: 1fr; } .hero h2 { font-size: 27px; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>Fractals <span class="sub">&mdash; from complex numbers to the Mandelbrot set</span></h1>
+    <nav>
+      <a class="active" href="index.html">Home</a>
+      <a href="complex.html">&#9312; Complex arithmetic</a>
+      <a href="mandelbrot.html">&#9313; Mandelbrot iteration</a>
+    </nav>
+    <button id="theme" title="Switch light / dark theme"></button>
+  </header>
+
+  <div class="home">
+    <section class="hero">
+      <div>
+        <h2>One tiny rule.<br>Infinitely detailed pictures.</h2>
+        <p>Square a number, add <i>c</i>, and repeat. Depending on <i>c</i>, the result either stays close to zero forever or races off to infinity.</p>
+        <p>Colour every <i>c</i> that stays close and you get the <b>Mandelbrot set</b>.</p>
+      </div>
+      <canvas id="heroCanvas" aria-label="The Mandelbrot set"></canvas>
+    </section>
+
+    <section class="cards">
+      <a class="demo" href="complex.html">
+        <h3><span class="num">&#9312;</span>Complex arithmetic</h3>
+        <p>Drag two numbers <i>z</i> and <i>w</i> around the plane.</p>
+        <ul>
+          <li>Adding: the parallelogram rule</li>
+          <li>Multiplying: <b>angles add, lengths multiply</b></li>
+          <li>Squaring, and powers that spiral in or out</li>
+          <li>Cartesian and polar form, side by side</li>
+        </ul>
+      </a>
+      <a class="demo" href="mandelbrot.html">
+        <h3><span class="num">&#9313;</span>The Mandelbrot iteration</h3>
+        <p>Follow z&#8320;, z&#8321;, z&#8322;, &hellip; one step at a time.</p>
+        <ul>
+          <li>Step, play, and see every number in a table</li>
+          <li>Each step = square, then shift by <i>c</i></li>
+          <li>Julia mode, orbit sounds, and the hidden &pi;</li>
+          <li>Watch the computer paint the set pixel by pixel</li>
+        </ul>
+      </a>
+    </section>
+
+    <section class="tips">
+      <h3>A possible path through the lesson</h3>
+      <ol>
+        <li><b>&#9312; z + w:</b> addition is just "walking" one arrow, then the other.</li>
+        <li><b>&#9312; z &middot; w:</b> put <i>w</i> on the unit circle and drag it: multiplying is <i>turning</i>. Press <b>i &middot; i = ?</b> to see why i&sup2; = &minus;1.</li>
+        <li><b>&#9312; z&sup2; and z&#8319;:</b> inside the unit circle, powers shrink to 0. Outside, they explode.</li>
+        <li><b>&#9313;:</b> now add <i>c</i> after every squaring. Try c = 0, &minus;1, i, 1 from the presets and step through by hand.</li>
+        <li>Turn on <b>Square, then add c</b> to link back to part &#9312;.</li>
+        <li>Drag <i>c</i> slowly across the edge of the shadow. Inside it the orbit stays bounded, and just outside it escapes.</li>
+        <li>Tick <b>Shadow uses only N steps</b> and slide N up from 1: the set takes shape step by step.</li>
+        <li>Finish with <b>Paint the set point by point</b>, Julia mode, and the &pi; presets.</li>
+      </ol>
+    </section>
+  </div>
+
+  <script src="js/plane.js"></script>
+  <script>
+    Theme.init(document.getElementById('theme'));
+    // Small Mandelbrot picture for the landing page.
+    (function () {
+      const cv = document.getElementById('heroCanvas');
+      function render() {
+        const r = cv.getBoundingClientRect();
+        const W = Math.max(1, Math.round(r.width)), H = Math.max(1, Math.round(r.height));
+        cv.width = W; cv.height = H;
+        const g = cv.getContext('2d');
+        const img = g.createImageData(W, H);
+        const scale = Math.min(W / 3.1, H / 2.45), cx = -0.72, cy = 0, iter = 300;
+        const pal = (t) => {
+          const a = [0.5, 0.5, 0.5], b = [0.5, 0.5, 0.5], d = [0.0, 0.12, 0.28];
+          return a.map((ai, i) => 255 * (ai + b[i] * Math.cos(6.2832 * (t + d[i]))));
+        };
+        for (let j = 0; j < H; j++) {
+          for (let i = 0; i < W; i++) {
+            const x0 = cx + (i - W / 2) / scale, y0 = cy - (j - H / 2) / scale;
+            let x = 0, y = 0, n = 0, x2 = 0, y2 = 0;
+            while (n < iter && x2 + y2 <= 256) { y = 2 * x * y + y0; x = x2 - y2 + x0; x2 = x * x; y2 = y * y; n++; }
+            const o = (j * W + i) * 4;
+            if (n >= iter) { img.data[o] = 4; img.data[o + 1] = 6; img.data[o + 2] = 16; }
+            else {
+              const nu = n + 1 - Math.log(Math.log(x2 + y2) * 0.5) / Math.LN2;
+              const t = Math.sqrt(Math.max(0, nu)) * 0.09 + 0.55;
+              const c = pal(t), fade = Math.min(1, nu / 8);
+              img.data[o] = c[0] * fade + 5 * (1 - fade);
+              img.data[o + 1] = c[1] * fade + 8 * (1 - fade);
+              img.data[o + 2] = c[2] * fade + 20 * (1 - fade);
+            }
+            img.data[o + 3] = 255;
+          }
+        }
+        g.putImageData(img, 0, 0);
+      }
+      let t = 0;
+      new ResizeObserver(() => { clearTimeout(t); t = setTimeout(render, 60); }).observe(cv);
+    })();
+  </script>
+</body>
+</html>
