@@ -185,6 +185,16 @@ main.app { flex: 1; display: flex; min-height: 0; }
 .explorer-bar input[type=range] { width: 110px; }
 body.explorer .explorer-bar { display: flex; }
 body.explorer .side, body.explorer #hint { display: none; }
+.ex-tip-touch { display: none; }
+@media (pointer: coarse) { .ex-tip-mouse { display: none; } .ex-tip-touch { display: inline; } }
+/* Full screen hides the header, so the set fills the whole window (100dvh = the visible height on phones). */
+body.explorer.fullview header.top { display: none; }
+body.explorer.fullview { height: 100vh; height: 100dvh; overflow: hidden; }
+/* On a phone the explorer fills the screen below the header, instead of the 62vh stage of the normal view. */
+@media (max-width: 900px) {
+  body.explorer { height: 100vh; height: 100dvh; overflow: hidden; }
+  body.explorer .stage { flex: 1; height: auto; }
+}
 .viewinfo {
   right: 60px; bottom: 12px;
   display: flex; align-items: center; gap: 6px;

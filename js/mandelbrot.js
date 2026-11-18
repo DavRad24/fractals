@@ -1223,6 +1223,8 @@
       if (paint.active) paint.stop();
     }
     document.body.classList.toggle('explorer', on);
+    if (on) window.scrollTo(0, 0); // on a phone the page may be scrolled down to the panel
+    else if (!fsElement()) setFullView(false); // CSS-only full screen ends with the explorer
     $('#explorerBtn').classList.toggle('active', on);
     $('#explorerBtn').innerHTML = on ? '&#10005; Back to the iteration' : '&#128301; Explorer';
     shadow.invalidate(); // (the canvas also resizes, which re-renders anyway)
@@ -1231,10 +1233,38 @@
   }
   $('#explorerBtn').addEventListener('click', () => setExplorer(!S.explorer));
   $('#exExit').addEventListener('click', () => setExplorer(false));
+  /* Full screen: the "fullview" class hides the header so the set fills the whole window, and the
+     browser's own full screen hides the browser too. iPhone Safari has no full screen for pages, so
+     there only the class applies (the address bar stays). */
+  function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function setFullView(on) {
+    document.body.classList.toggle('fullview', on);
+    $('#exFull').textContent = on ? 'Exit full screen' : 'Full screen';
+  }
   $('#exFull').addEventListener('click', () => {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    const root = document.documentElement;
+    if (document.body.classList.contains('fullview')) {
+      setFullView(false);
+      if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      return;
+    }
+    setFullView(true);
+    const req = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (req) {
+      try {
+        const p = req.call(root, { navigationUI: 'hide' });
+        if (p && p.catch) p.catch(() => {}); // refused: keep the CSS-only version
+      } catch (e) { /* not allowed here: keep the CSS-only version */ }
+    }
   });
+  // Leaving the browser's full screen some other way (Esc, the back gesture) also ends the full view.
+  let wasFs = false;
+  const onFsChange = () => {
+    if (fsElement()) wasFs = true;
+    else if (wasFs) { wasFs = false; setFullView(false); }
+  };
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
   const palSel = $('#palette');
   for (const [k, p] of Object.entries(PALETTES)) palSel.add(new Option(p.name, k));
   palSel.value = S.palette;

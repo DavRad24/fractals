@@ -279,9 +279,15 @@
       this.viewChanged();
     }
 
+    clampScale(s) { return Math.max(4, Math.min(this.opts.maxScale || 5e7, s)); }
+
     zoomAt(sx, sy, f) {
-      const p = this.toWorld(sx, sy);
-      this.scale = Math.max(4, Math.min(this.opts.maxScale || 5e7, this.scale * f));
+      this.zoomTo(this.toWorld(sx, sy), sx, sy, this.scale * f);
+    }
+
+    /** set the zoom to `scale` and put world point p at screen point (sx, sy) */
+    zoomTo(p, sx, sy, scale) {
+      this.scale = this.clampScale(scale);
       this.cx = p.x - (sx - this.w / 2) / this.scale;
       this.cy = p.y + (sy - this.h / 2) / this.scale;
       this.viewChanged();
@@ -329,10 +335,29 @@
 
     _bindPointer() {
       const c = this.canvas;
+      // Fingers currently on the canvas (pointerId -> [sx, sy]). Two fingers = pinch to zoom.
+      const pts = new Map();
+      const twoFingers = () => {
+        const [[ax, ay], [bx, by]] = [...pts.values()];
+        return { mx: (ax + bx) / 2, my: (ay + by) / 2, dist: Math.hypot(bx - ax, by - ay) || 1 };
+      };
+      // The world point under the midpoint stays under the midpoint, so two fingers also pan.
+      const startPinch = () => {
+        const f = twoFingers();
+        this._drag = { kind: 'pinch', d0: f.dist, s0: this.scale, p: this.toWorld(f.mx, f.my) };
+      };
       c.addEventListener('pointerdown', (e) => {
         if (e.button !== 0 && e.pointerType === 'mouse') return;
         const [sx, sy] = this._local(e);
         c.setPointerCapture(e.pointerId);
+        pts.set(e.pointerId, [sx, sy]);
+        if (pts.size > 1) {
+          // a second finger: stop dragging a point (if any) and pinch instead
+          const d = this._drag;
+          if (d && d.kind === 'point') d.item.onEnd && d.item.onEnd();
+          if (pts.size === 2) startPinch();
+          return;
+        }
         const hit = this.hitTest(sx, sy);
         if (hit) {
           const p = hit.get();
@@ -346,7 +371,14 @@
       });
       c.addEventListener('pointermove', (e) => {
         const [sx, sy] = this._local(e);
+        if (pts.has(e.pointerId)) pts.set(e.pointerId, [sx, sy]);
         const d = this._drag;
+        if (d && d.kind === 'pinch') {
+          if (pts.size < 2) return;
+          const f = twoFingers();
+          this.zoomTo(d.p, f.mx, f.my, d.s0 * f.dist / d.d0);
+          return;
+        }
         if (d && d.kind === 'point') {
           const m = this.toWorld(sx, sy);
           d.item.set(m.x + d.ox, m.y + d.oy);
@@ -366,7 +398,18 @@
         this.opts.onHover && this.opts.onHover(m.x, m.y, !!d);
       });
       const end = (e, cancelled) => {
+        pts.delete(e.pointerId);
         const d = this._drag;
+        if (d && d.kind === 'pinch') {
+          if (pts.size >= 2) { startPinch(); return; }
+          if (pts.size === 1) {
+            // one finger left: carry on panning with it (and don't treat lifting it as a tap)
+            const [sx, sy] = [...pts.values()][0];
+            this._drag = { kind: 'pan', sx0: sx, sy0: sy, cx0: this.cx, cy0: this.cy, moved: true };
+            return;
+          }
+        }
+        if (pts.size > 0) return;
         this._drag = null;
         c.style.cursor = 'crosshair';
         if (!d) return;

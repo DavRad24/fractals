@@ -31,7 +31,8 @@ To present, press F11 for full screen. The ☀/🌙 button switches between ligh
   and the render progress.
 - **🔭 Explorer** (button in the header, or key `E`; `Esc` to leave): just the set, full width, no panel or grid.
   Choose a colour palette (Classic, Ultra Fractal, Fire, Ice, Neon, Gold, Forest, Rainbow, Black & white) and the colour band density.
-  Click to zoom in ×2, drag to pan, scroll to zoom. *Full screen* hides the browser too. In Julia mode it explores the Julia set of c.
+  Click to zoom in ×2, drag to pan, scroll to zoom. On a phone or tablet: tap to zoom in, drag to pan, pinch to zoom.
+  *Full screen* hides the header and the browser too (on iPhone, Safari keeps its address bar). In Julia mode it explores the Julia set of c.
 - **Shadow uses only N steps**: slide N from 1 upward and the set appears in stages (disc → oval → pear → …).
 - **Julia mode**: fix c and drag the start z₀. The shadow becomes the filled Julia set of c and reshapes as you drag c.
 - **Follow the mouse**: the orbit follows the pointer without clicking.
